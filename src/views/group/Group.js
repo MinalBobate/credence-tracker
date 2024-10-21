@@ -13,10 +13,14 @@ import {
   Box,
   TextField,
   FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material'
 import { RiEdit2Fill } from 'react-icons/ri'
 import { AiFillDelete } from 'react-icons/ai'
 import {
+  CFormSelect,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -43,9 +47,9 @@ const Group = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [limit, setLimit] = useState(10)
   const [pageCount, setPageCount] = useState()
-
   const handleEditModalClose = () => setEditModalOpen(false)
   const handleAddModalClose = () => setAddModalOpen(false)
+  const [filteredData, setFilteredData] = useState([]);
 
   const style = {
     position: 'absolute',
@@ -91,9 +95,26 @@ const Group = () => {
     }
   }
 
+  // ##################### Filter data by search query #######################
+  const filterGroups = () => {
+    if (!searchQuery) {
+      setFilteredData(data); // No query, show all drivers
+    } else {
+      const filtered = data.filter(
+        (group) =>
+          group.name.toLowerCase().includes(searchQuery.toLowerCase()) 
+      );
+      setFilteredData(filtered);
+    }
+  };
+
   useEffect(() => {
     fetchGroupData()
-  }, [])
+  }, [limit])
+
+  useEffect(() => {
+    filterGroups(searchQuery);
+  }, [data, searchQuery]);
 
   const handlePageClick = (e) => {
     console.log(e.selected + 1)
@@ -272,8 +293,8 @@ const Group = () => {
                   </CTableDataCell>
                 </CTableRow>
               </>
-            ) : data.length > 0 ? (
-              data?.map((item, index) => (
+            ) : filteredData.length > 0 ? (
+              filteredData?.map((item, index) => (
                 <CTableRow key={index}>
                   <CTableDataCell className="text-center p-0">{item.name}</CTableDataCell>
                   <CTableDataCell
@@ -321,28 +342,46 @@ const Group = () => {
           </CTableBody>
         </CTable>
       </TableContainer>
-      {pageCount > 1 && (
-        <ReactPaginate
-          breakLabel="..."
-          nextLabel="next >"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={5}
-          pageCount={pageCount} // Set based on the total pages from the API
-          previousLabel="< previous"
-          renderOnZeroPageCount={null}
-          marginPagesDisplayed={2}
-          containerClassName="pagination justify-content-center"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          activeClassName="active"
-        />
-      )}
+      <div className='d-flex justify-content-center align-items-center'>
 
-      {/* Add Modal */}
+        <div className="d-flex">
+          {/* Pagination */}
+          <div className="me-3"> {/* Adds margin to the right of pagination */}
+            <ReactPaginate
+              breakLabel="..."
+              nextLabel="next >"
+              onPageChange={handlePageClick}
+              pageRangeDisplayed={5}
+              pageCount={pageCount} // Set based on the total pages from the API
+              previousLabel="< previous"
+              renderOnZeroPageCount={null}
+              marginPagesDisplayed={2}
+              containerClassName="pagination justify-content-center"
+              pageClassName="page-item"
+              pageLinkClassName="page-link"
+              previousClassName="page-item"
+              previousLinkClassName="page-link"
+              nextClassName="page-item"
+              nextLinkClassName="page-link"
+              activeClassName="active"
+            />
+          </div>
+          {/* Form Control */}
+          <div style={{ width: "90px" }}>
+            <CFormSelect
+              aria-label="Default select example"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+              options={[
+                { label: '10', value: '10' },
+                { label: '50', value: '50' },
+                { label: '500', value: '500' },
+                { label: '5000', value: '5000' }
+              ]}
+            />
+          </div>
+        </div>
+      </div>
 
       <Modal
         open={addModalOpen}

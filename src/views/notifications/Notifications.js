@@ -67,7 +67,7 @@ const Notification = () => {
   const [limit, setLimit] = useState(10)
   const [pageCount, setPageCount] = useState()
   const accessToken = Cookies.get('authToken')
-
+  const [filteredData, setFilteredData] = useState([]);
   const [groups, setGroups] = useState([])
   const [selectedGroup, setSelectedGroup] = useState()
   const [devices, setDevices] = useState([])
@@ -133,7 +133,7 @@ const Notification = () => {
 
   useEffect(() => {
     getGroups()
-  }, [])
+  }, [limit])
 
   // ##################### getting data  ###################
   const fetchNotificationData = async (page = 1) => {
@@ -160,9 +160,26 @@ const Notification = () => {
     }
   }
 
+  // ##################### Filter data by search query #######################
+  const filterNotifications = () => {
+    if (!searchQuery) {
+      setFilteredData(data); // No query, show all drivers
+    } else {
+      const filtered = data.filter(
+        (notification) =>
+          notification.deviceId?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  };
+
   useEffect(() => {
     fetchNotificationData()
   }, [])
+
+  useEffect(() => {
+    filterNotifications(searchQuery);
+  }, [data, searchQuery]);
 
   const handlePageClick = (e) => {
     console.log(e.selected + 1)
@@ -237,7 +254,7 @@ const Notification = () => {
   // ###################### Delete Group ##############################
 
   const handleDeleteNotification = async (item) => {
-    
+
     console.log(item)
 
     try {
@@ -348,8 +365,8 @@ const Notification = () => {
                   </CTableDataCell>
                 </CTableRow>
               </>
-            ) : data.length > 0 ? (
-              data?.map((item, index) => (
+            ) : filteredData.length > 0 ? (
+              filteredData?.map((item, index) => (
                 <CTableRow key={index}>
                   <CTableDataCell className="text-center p-0">{item.deviceId?.name}</CTableDataCell>
                   <CTableDataCell className="text-center p-0">{item.channel}</CTableDataCell>
@@ -413,29 +430,45 @@ const Notification = () => {
           </CTableBody>
         </CTable>
       </TableContainer>
-      {pageCount > 1 && (
-        <ReactPaginate
-          breakLabel="..."
-          nextLabel="next >"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={5}
-          pageCount={pageCount} // Set based on the total pages from the API
-          previousLabel="< previous"
-          renderOnZeroPageCount={null}
-          marginPagesDisplayed={2}
-          containerClassName="pagination justify-content-center"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          activeClassName="active"
-        />
-      )}
-
-      {/* Add Modal */}
-
+      <div className='d-flex justify-content-center align-items-center'>
+        <div className="d-flex">
+          {/* Pagination */}
+          <div className="me-3"> {/* Adds margin to the right of pagination */}
+            <ReactPaginate
+              breakLabel="..."
+              nextLabel="next >"
+              onPageChange={handlePageClick}
+              pageRangeDisplayed={5}
+              pageCount={pageCount} // Set based on the total pages from the API
+              previousLabel="< previous"
+              renderOnZeroPageCount={null}
+              marginPagesDisplayed={2}
+              containerClassName="pagination justify-content-center"
+              pageClassName="page-item"
+              pageLinkClassName="page-link"
+              previousClassName="page-item"
+              previousLinkClassName="page-link"
+              nextClassName="page-item"
+              nextLinkClassName="page-link"
+              activeClassName="active"
+            />
+          </div>
+          {/* Form Control */}
+          <div style={{ width: "90px" }}>
+            <CFormSelect
+              aria-label="Default select example"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+              options={[
+                { label: '10', value: '10' },
+                { label: '50', value: '50' },
+                { label: '500', value: '500' },
+                { label: '5000', value: '5000' }
+              ]}
+            />
+          </div>
+        </div>
+      </div>
       <Modal
         open={addModalOpen}
         onClose={handleAddModalClose}

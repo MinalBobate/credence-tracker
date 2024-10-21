@@ -89,7 +89,6 @@ const _nav = (role, decodedToken) => {
               { component: CNavItem, name: 'Driver', to: '/driver' },
               { component: CNavItem, name: 'Notifications', to: '/notifications' },
               { component: CNavItem, name: 'Maintenance', to: '/maintenance' },
-              // { component: CNavItem, name: 'Preferences', to: '/preferences' },
               { component: CNavItem, name: 'Category', to: '/category' },
               { component: CNavItem, name: 'Model', to: '/model' },
             ],
@@ -155,7 +154,7 @@ const _nav = (role, decodedToken) => {
               maintenance && { component: CNavItem, name: 'Maintenance', to: '/maintenance' },
             ].filter(Boolean),
           },
-          (status || distance || history || stop || travel || idle || sensor || alerts || vehicle || geofenceReport) &&
+          (status || distance || history || stop || travel || idle || sensor || alerts || dayreport || vehicle || geofenceReport) &&
           {
             component: CNavGroup,
             name: 'Report',

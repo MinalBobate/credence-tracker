@@ -76,6 +76,8 @@ const Users = () => {
   const steps = ['Personal Info', 'Permissions']
   const [isSuperAdmin, setSuperAdmin] = useState(false)
   const [filteredData, setFilteredData] = useState([]);
+  const [groups, setGroups] = useState([])
+  const [exportData, setExportData] = useState([]);
 
   // Go to the next step
   const handleNext = () => {
@@ -135,6 +137,38 @@ const Users = () => {
     }
   }
 
+
+
+  const fetchGroups = async () => {
+    const accessToken = Cookies.get('authToken')
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/group`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+
+      const data = await response.json()
+      console.log('groups: ', data.groups)
+      setGroups(data.groups) // Assuming the API returns { groups: [...] }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
+  useEffect(() => {
+    fetchGroups();
+  }, [])
+
+
+
+
   // ##################### Filter data by search query #######################
   const filterUsers = () => {
     if (!searchQuery) {
@@ -171,20 +205,18 @@ const Users = () => {
     email: '',
     mobile: '',
     password: '',
+    groupsAssigned: [],
     permissions: {
       notification: false,
       devices: false,
       driver: false,
       groups: false,
-      // category: false,
-      // model: false,
       users: false,
       report: false,
       stop: false,
       travel: false,
       geofence: false,
       maintenance: false,
-      // preferences: false,
       status: false,
       distance: false,
       history: false,
@@ -226,10 +258,15 @@ const Users = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }))
+
+
+
+    console.log("this is value: ", formData);
   }
 
   // Handle permission changes
@@ -269,24 +306,25 @@ const Users = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
-    const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
-    const phonePattern = /^[0-9]{10}$/
+    // const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
+    // const phonePattern = /^[0-9]{10}$/
 
-    if (!emailPattern.test(formData.email)) {
-      toast.error('Please enter a valid email address')
-      return
-    }
+    // if (!emailPattern.test(formData.email)) {
+    //   toast.error('Please enter a valid email address')
+    //   return
+    // }
 
-    if (!phonePattern.test(formData.mobile)) {
-      toast.error('Please enter a valid 10-digit phone number')
-      return
-    }
+    // if (!phonePattern.test(formData.mobile)) {
+    //   toast.error('Please enter a valid 10-digit phone number')
+    //   return
+    // }
 
     const dataToSubmit = {
       username: formData.username,
       mobile: formData.mobile,
       email: formData.email,
       password: formData.password,
+      groupsAssigned: formData.groupsAssigned,
       ...formData.permissions,
     }
 
@@ -362,6 +400,7 @@ const Users = () => {
       username: userData.username,
       email: userData.email,
       mobile: userData.mobile,
+      groupsAssigned: userData.groupsAssigned,
       permissions: {
         notification: userData.notification,
         devices: userData.devices,
@@ -399,6 +438,7 @@ const Users = () => {
       email: formData.email,
       mobile: formData.mobile,
       password: formData.password,
+      groupsAssigned: formData.groupsAssigned,
       ...formData.permissions,
     }
 
@@ -501,73 +541,114 @@ const Users = () => {
       throw error.response ? error.response.data : new Error('An error occurred')
     }
   }
-  const exportToExcel = () => {
+
+
+
+  const exportToExcel = async () => {
     // Map filtered data into the format required for export
-    const dataToExport = filteredData.map((item, rowIndex) => {
-      const masterPermissions = ['users', 'groups', 'devices', 'geofence', 'driver', 'notification', 'maintenance']
-        .filter((permission) => item[permission])
-        .join(', ') || 'N/A';
 
-      const reportsPermissions = [
-        'history', 'stop', 'travel', 'status', 'distance', 'idle', 'sensor', 'alerts', 'vehicle', 'geofenceReport'
-      ]
-        .filter((permission) => item[permission])
-        .join(', ') || 'N/A';
+    const accessToken = Cookies.get('authToken')
+    const url = `${import.meta.env.VITE_API_URL}/user`
 
-      // Define row data
-      const rowData = {
-        SN: rowIndex + 1,
-        Name: item.username || 'N/A',
-        Email: item.email || 'N/A',
-        'Mobile No.': item.mobile || 'N/A',
-        'Master Permissions': masterPermissions,
-        'Reports Permissions': reportsPermissions
-      };
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: 'Bearer ' + accessToken,
+        },
+      })
 
-      return rowData; // Return row data in the correct format
-    });
+      if (response.data.users) {
+        const dataToExport = response.data.users.map((item, rowIndex) => {
+          const masterPermissions = ['users', 'groups', 'devices', 'geofence', 'driver', 'notification', 'maintenance']
+            .filter((permission) => item[permission])
+            .join(', ') || 'N/A';
 
-    // Create worksheet and workbook
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
+          const reportsPermissions = [
+            'history', 'stop', 'travel', 'status', 'distance', 'idle', 'sensor', 'alerts', 'vehicle', 'geofenceReport'
+          ]
+            .filter((permission) => item[permission])
+            .join(', ') || 'N/A';
 
-    // Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'User Data');
+          // Define row data
+          const rowData = {
+            SN: rowIndex + 1,
+            Name: item.username || 'N/A',
+            Email: item.email || 'N/A',
+            'Mobile No.': item.mobile || 'N/A',
+            'Master Permissions': masterPermissions,
+            'Reports Permissions': reportsPermissions
+          };
 
-    // Write the Excel file
-    XLSX.writeFile(workbook, 'user_data.xlsx');
+          return rowData; // Return row data in the correct format
+        });
+
+        // Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'User Data');
+
+        // Write the Excel file
+        XLSX.writeFile(workbook, 'user_data.xlsx');
+      }
+    } catch (e) {
+      console.log(e)
+    }
+
+
+
   };
 
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    const tableColumn = ['SN', 'Name', 'Email', 'Mobile No.', 'Master Permissions', 'Reports Permissions', 'Actions'];
+  const exportToPDF = async () => {
 
-    const tableRows = filteredData.map((row, rowIndex) => {
-      const masterPermissions = ['users', 'groups', 'devices', 'geofence', 'driver', 'notification', 'maintenance']
-        .filter((permission) => row[permission])
-        .join(', ') || 'N/A';
+    const accessToken = Cookies.get('authToken')
+    const url = `${import.meta.env.VITE_API_URL}/user`
 
-      const reportsPermissions = [
-        'history', 'stop', 'travel', 'status', 'distance', 'idle', 'sensor', 'alerts', 'vehicle', 'geofenceReport'
-      ]
-        .filter((permission) => row[permission])
-        .join(', ') || 'N/A';
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: 'Bearer ' + accessToken,
+        },
+      })
 
-      const rowData = [
-        row.username || '--',
-        row.email || '--',
-        row.mobile || 'N/A',
-        masterPermissions,
-        reportsPermissions,
-        'Edit/Delete' // Placeholder for action buttons
-      ];
+      if (response.data.users) {
+        const doc = new jsPDF();
+        const tableColumn = ['SN', 'Name', 'Email', 'Mobile No.', 'Master Permissions', 'Reports Permissions', 'Actions'];
 
-      return [rowIndex + 1, ...rowData];
-    });
+        const tableRows = response.data.users?.map((row, rowIndex) => {
+          const masterPermissions = ['users', 'groups', 'devices', 'geofence', 'driver', 'notification', 'maintenance']
+            .filter((permission) => row[permission])
+            .join(', ') || 'N/A';
 
-    doc.autoTable(tableColumn, tableRows, { startY: 20 });
-    doc.save('user_data.pdf');
+          const reportsPermissions = [
+            'history', 'stop', 'travel', 'status', 'distance', 'idle', 'sensor', 'alerts', 'vehicle', 'geofenceReport'
+          ]
+            .filter((permission) => row[permission])
+            .join(', ') || 'N/A';
+
+          const rowData = [
+            row.username || '--',
+            row.email || '--',
+            row.mobile || 'N/A',
+            masterPermissions,
+            reportsPermissions,
+            'Edit/Delete' // Placeholder for action buttons
+          ];
+
+          return [rowIndex + 1, ...rowData];
+        });
+
+        doc.autoTable(tableColumn, tableRows, { startY: 20 });
+        doc.save('user_data.pdf');
+      }
+    } catch (e) {
+      console.log(e)
+    }
+
+
+
   };
 
   //  ####################################################
@@ -919,6 +1000,22 @@ const Users = () => {
                     ),
                   }}
                 />
+                <FormControl fullWidth sx={{ marginBottom: 2 }} key={"group"}>
+                  <InputLabel>Groups</InputLabel>
+                  <Select
+                    name="groupsAssigned" // Should match the key in formData
+                    value={formData.groupsAssigned || []} // This is already an array in formData
+                    onChange={handleInputChange}
+                    label="Groups"
+                    multiple
+                  >
+                    {groups.map((group) => (
+                      <MenuItem key={group._id} value={group._id}>
+                        {group.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </div>
             )}
 
@@ -1217,6 +1314,23 @@ const Users = () => {
                     ),
                   }}
                 />
+
+                <FormControl fullWidth sx={{ marginBottom: 2 }} key={"group"}>
+                  <InputLabel>{"Group"}</InputLabel>
+                  <Select
+                    name="groupsAssigned"
+                    value={formData.groupsAssigned || []}
+                    onChange={handleInputChange}
+                    label={"Groups"}
+                    multiple
+                  >
+                    {groups?.map((group) => (
+                      <MenuItem key={group._id} value={group._id}>
+                        {group.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </div>
             )}
 

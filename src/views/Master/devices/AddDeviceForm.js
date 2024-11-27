@@ -41,6 +41,14 @@ const AddDeviceModal = ({
   handleYearSelection,
   setShowExpirationDropdown,
 }) => {
+
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; //${year}/${month}/${day} aisa likha to default set nhi hota
+  };
   const handleAddSubmit = async () => {
     const oldapiUrl = `http://63.142.251.13:8082/api/devices`
     const apiUrl = `${import.meta.env.VITE_API_URL}/device`
@@ -65,9 +73,9 @@ const AddDeviceModal = ({
       geofences: Array.isArray(formData.geofences) ? formData.geofences : [],
       model: formData.model || '',
       category: formData.category || '',
-      installationdate: formData.installationdate || '',
-      expirationdate: formData.expirationdate || '',
-      extenddate: formData.extenddate || '',
+      installationdate: formData.installationDate || '',
+      expirationdate: formData.expirationDate || '',
+      extenddate: formData.extendDate || '',
     }
 
     if (!newRow.name || !newRow.uniqueId || !newRow.sim) {
@@ -302,7 +310,7 @@ const AddDeviceModal = ({
             {/* Step 3: Installation and expiration dates */}
             {currentStep === 2 &&
               columns.map((col) => {
-                if (col.accessor === 'installationdate') {
+                if (col.accessor === 'installationDate') {
                   return (
                     <>
                       <label>Installation date: </label>
@@ -310,13 +318,13 @@ const AddDeviceModal = ({
                         key={col.accessor}
                         type="date"
                         name={col.accessor}
-                        value={formData[col.accessor] || ''}
+                        value={getCurrentDate()}
                         onChange={handleInputChange}
                         fullWidth
                       />
                     </>
                   )
-                } else if (col.accessor === 'expirationdate') {
+                } else if (col.accessor === 'expirationDate') {
                   return (
                     <FormControl fullWidth sx={{ marginY: 2 }} key={col.accessor}>
                       <InputLabel>Expiration Plans</InputLabel>

@@ -220,7 +220,7 @@ const EditDeviceModal = ({
           {/* Step 3: Installation and Expiration Dates */}
           {currentStep === 2 &&
             columns.map((col) => {
-              if (col.accessor === 'installationdate') {
+              if (col.accessor === 'installationDate') {
                 return (
                   <div className="mt-3">
                     <label>Installation date: </label>
@@ -234,7 +234,7 @@ const EditDeviceModal = ({
                     />
                   </div>
                 )
-              } else if (col.accessor === 'expirationdate') {
+              } else if (col.accessor === 'expirationDate') {
                 return (
                   <div className="mt-3">
                     <label>Expiration Date: </label>
@@ -248,7 +248,7 @@ const EditDeviceModal = ({
                     />
                   </div>
                 )
-              } else if (col.accessor === 'extenddate') {
+              } else if (col.accessor === 'extendDate') {
                 return (
                   <div className="mt-3">
                     <label>Extend Plan: </label>

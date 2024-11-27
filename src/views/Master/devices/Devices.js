@@ -125,9 +125,9 @@ const Devices = () => {
     { Header: 'Geofences', accessor: 'geofences' },
     { Header: 'Model', accessor: 'model' }, // Maps to 'model'
     { Header: 'Category', accessor: 'category' }, // Maps to 'category'
-    { Header: 'Installation Date', accessor: 'installationdate' }, // Maps to 'installationdate'
-    { Header: 'Expiration', accessor: 'expirationdate' }, // Maps to 'expirationdate'
-    { Header: 'Extend Date', accessor: 'extenddate' },
+    { Header: 'Installation Date', accessor: 'installationDate' }, // Maps to 'installationdate'
+    { Header: 'Expiration', accessor: 'expirationDate' }, // Maps to 'expirationdate'
+    { Header: 'Extend Date', accessor: 'extendDate' },
   ]
 
   const style = {
